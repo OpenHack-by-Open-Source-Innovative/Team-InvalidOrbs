@@ -94,7 +94,9 @@ export default function Map({ navigation, route }) {
           let isWithinTargetArea = isWithInTargetArea(location.coords.latitude, location.coords.longitude, coordinate.latitude, coordinate.longitude);
           if(isWithinTargetArea){
             navigation.replace("Alarm", {targetSet: true, location : location});
-            return;
+            setSearchQuery('');
+            setLocation({coords : {latitude : 0,
+              longitude : 0}})
           }
         }
         setLocation(location);
