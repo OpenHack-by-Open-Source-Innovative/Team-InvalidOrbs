@@ -3,11 +3,16 @@ import MapView, { Marker } from 'react-native-maps';
 import * as React from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Searchbar } from 'react-native-paper';
+import * as Location from 'expo-location';
+
 
 
 export default function App() {
 
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [location, setLocation] = React.useState(null);
+  const [errorMsg, setErrorMsg] = React.useState(null);
+
   const [coordinate, setCoordinate] = React.useState({
     latitude: 0,
     longitude: 0,
@@ -26,12 +31,26 @@ export default function App() {
       .then(response => response.json()).then((responseJson) => {
        // console.log(responseJson);
         setCoordinate({...coordinate, latitude: parseFloat(responseJson[0].lat), longitude: parseFloat(responseJson[0].lon)});
+        console.log(coordinate);
       })
       .catch(error => {
         console.error(error);
       });
   };
-  
+
+  const isWithInTargetArea = (lat1, lon1, lat2, lon2) => {
+    let radius=0.009009009;
+    let distance = Math.sqrt(Math.pow((lat1-lat2),2) + Math.pow((lon1-lon2),2));
+
+    console.log(distance);
+
+    if(distance <= radius){
+      console.log(true);
+    }else{
+      console.log(false);
+    }
+  }
+
   const markers = [
     {
       latitude: 45.65,
@@ -42,8 +61,25 @@ export default function App() {
   ];
 
   React.useEffect(() => {
+    const interval = setInterval(() => {
+      (async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setErrorMsg('Permission to access location was denied');
+          return;
+        }
+        let location = await Location.getCurrentPositionAsync({});
+        if(location){
+          isWithInTargetArea(location.coords.latitude, location.coords.longitude, coordinate.latitude, coordinate.longitude);
+        }
+        setLocation(location);
+        console.log(location);
+      })();
+    }, 5000);
+
+    return () => clearInterval(interval);
     
-  }, [searchQuery]);
+  });
 
   return (
     <SafeAreaView style={styles.container}>
