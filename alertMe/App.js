@@ -4,6 +4,7 @@ import * as React from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import * as Location from 'expo-location';
+import { Audio } from 'expo-av';
 
 
 
@@ -12,11 +13,22 @@ export default function App() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [location, setLocation] = React.useState(null);
   const [errorMsg, setErrorMsg] = React.useState(null);
+  const [sound, setSound] = React.useState();
 
   const [coordinate, setCoordinate] = React.useState({
     latitude: 0,
     longitude: 0,
   });
+
+  async function playSound() {
+    console.log('Loading Sound');
+    const { sound } = await Audio.Sound.createAsync( require('./assets/alarm.mp3')
+    );
+    setSound(sound);
+
+    console.log('Playing Sound');
+    await sound.playAsync();
+  }
 
   const onChangeSearch = query => setSearchQuery(query);
 
@@ -38,6 +50,10 @@ export default function App() {
       });
   };
 
+  const playAlarm = () => {
+    playSound();
+  };
+
   const isWithInTargetArea = (lat1, lon1, lat2, lon2) => {
     let radius=0.009009009;
     let distance = Math.sqrt(Math.pow((lat1-lat2),2) + Math.pow((lon1-lon2),2));
@@ -45,9 +61,11 @@ export default function App() {
     console.log(distance);
 
     if(distance <= radius){
-      console.log(true);
+      console.log("You are in the target area")
+      return true
     }else{
-      console.log(false);
+      console.log("You are not in the target area")
+      return false
     }
   }
 
@@ -70,7 +88,10 @@ export default function App() {
         }
         let location = await Location.getCurrentPositionAsync({});
         if(location){
-          isWithInTargetArea(location.coords.latitude, location.coords.longitude, coordinate.latitude, coordinate.longitude);
+          let isWithinTargetArea = isWithInTargetArea(location.coords.latitude, location.coords.longitude, coordinate.latitude, coordinate.longitude);
+          if(isWithinTargetArea){
+            playAlarm();
+          }
         }
         setLocation(location);
         console.log(location);
