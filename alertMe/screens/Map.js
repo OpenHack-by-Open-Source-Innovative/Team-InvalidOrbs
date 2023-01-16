@@ -1,20 +1,19 @@
-import { StatusBar } from 'expo-status-bar';
-import MapView, { Marker } from 'react-native-maps';
-import * as React from 'react';
-import { SafeAreaView, StyleSheet, Text, View,} from 'react-native';
-import { Searchbar } from 'react-native-paper';
-import * as Location from 'expo-location';
-import { Audio } from 'expo-av';
-
-
+import { StatusBar } from "expo-status-bar";
+import MapView, { Marker } from "react-native-maps";
+import * as React from "react";
+import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Searchbar } from "react-native-paper";
+import * as Location from "expo-location";
+import { Audio } from "expo-av";
 
 export default function Map({ navigation, route }) {
-
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [location, setLocation] = React.useState({coords : {
-    latitude : route.params.location.coords.latitude,
-    longitude : route.params.location.coords.longitude
-  }});
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [location, setLocation] = React.useState({
+    coords: {
+      latitude: route.params.location.coords.latitude,
+      longitude: route.params.location.coords.longitude,
+    },
+  });
   const [errorMsg, setErrorMsg] = React.useState(null);
   const [sound, setSound] = React.useState();
 
@@ -24,31 +23,40 @@ export default function Map({ navigation, route }) {
   });
 
   async function playSound() {
-    console.log('Loading Sound');
-    const { sound } = await Audio.Sound.createAsync( require('../assets/alarm.mp3')
+    console.log("Loading Sound");
+    const { sound } = await Audio.Sound.createAsync(
+      require("../assets/alarm.mp3")
     );
     setSound(sound);
 
-    console.log('Playing Sound');
+    console.log("Playing Sound");
     await sound.playAsync();
   }
 
-  const onChangeSearch = query => setSearchQuery(query);
+  const onChangeSearch = (query) => setSearchQuery(query);
 
   const getGeoCode = () => {
-    return fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${searchQuery}&appid=d8aede95ec0c205ed8a4f9514ccea6d3`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+    return fetch(
+      `http://api.openweathermap.org/geo/1.0/direct?q=${searchQuery}&appid=d8aede95ec0c205ed8a4f9514ccea6d3`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       }
-    })
-      .then(response => response.json()).then((responseJson) => {
-       // console.log(responseJson);
-        setCoordinate({...coordinate, latitude: parseFloat(responseJson[0].lat), longitude: parseFloat(responseJson[0].lon)});
+    )
+      .then((response) => response.json())
+      .then((responseJson) => {
+        // console.log(responseJson);
+        setCoordinate({
+          ...coordinate,
+          latitude: parseFloat(responseJson[0].lat),
+          longitude: parseFloat(responseJson[0].lon),
+        });
         console.log(coordinate);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error);
       });
   };
@@ -58,45 +66,54 @@ export default function Map({ navigation, route }) {
   };
 
   const isWithInTargetArea = (lat1, lon1, lat2, lon2) => {
-    let radius=0.009009009;
-    let distance = Math.sqrt(Math.pow((lat1-lat2),2) + Math.pow((lon1-lon2),2));
+    let radius = 0.009009009;
+    let distance = Math.sqrt(
+      Math.pow(lat1 - lat2, 2) + Math.pow(lon1 - lon2, 2)
+    );
 
     console.log(distance);
 
-    if(distance <= radius){
-      console.log("You are in the target area")
-      return true
-    }else{
-      console.log("You are not in the target area")
-      return false
+    if (distance <= radius) {
+      console.log("You are in the target area");
+      return true;
+    } else {
+      console.log("You are not in the target area");
+      return false;
     }
-  }
+  };
 
   const markers = [
     {
       latitude: 45.65,
-      longitude: -78.90,
-      title: 'Foo Place',
-      subtitle: '1234 Foo Drive'
-    }
+      longitude: -78.9,
+      title: "Foo Place",
+      subtitle: "1234 Foo Drive",
+    },
   ];
 
   React.useEffect(() => {
     const interval = setInterval(() => {
       (async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setErrorMsg('Permission to access location was denied');
+        if (status !== "granted") {
+          setErrorMsg("Permission to access location was denied");
           return;
         }
         let location = await Location.getCurrentPositionAsync({});
-        if(location){
-          let isWithinTargetArea = isWithInTargetArea(location.coords.latitude, location.coords.longitude, coordinate.latitude, coordinate.longitude);
-          if(isWithinTargetArea){
-            navigation.replace("Alarm", {targetSet: true, location : location});
-            setSearchQuery('');
-            setLocation({coords : {latitude : 0,
-              longitude : 0}})
+        if (location) {
+          let isWithinTargetArea = isWithInTargetArea(
+            location.coords.latitude,
+            location.coords.longitude,
+            coordinate.latitude,
+            coordinate.longitude
+          );
+          if (isWithinTargetArea) {
+            navigation.replace("Alarm", {
+              targetSet: true,
+              location: location,
+            });
+            setSearchQuery("");
+            setLocation({ coords: { latitude: 0, longitude: 0 } });
           }
         }
         setLocation(location);
@@ -105,29 +122,29 @@ export default function Map({ navigation, route }) {
     }, 5000);
 
     return () => clearInterval(interval);
-    
   });
 
   return (
     <SafeAreaView style={styles.container}>
-        <Searchbar
-              style = {styles.Searchbar}
-              placeholder="Search"
-              onChangeText={onChangeSearch}
-              onSubmitEditing={getGeoCode}
-              value={searchQuery}
-        />
-      
-    <MapView style={styles.map} initialRegion={{
-              latitude: 37.78825,
-              longitude: -122.4324,
-              latitudeDelta: 0.0,
-              longitudeDelta: 0.0,
-          }}  >
-      <Marker coordinate={coordinate} pinColor='gold'></Marker>
-    </MapView>
-    
-    
+      <Searchbar
+        style={styles.Searchbar}
+        placeholder="Search"
+        onChangeText={onChangeSearch}
+        onSubmitEditing={getGeoCode}
+        value={searchQuery}
+      />
+
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: 37.78825,
+          longitude: -122.4324,
+          latitudeDelta: 0.0,
+          longitudeDelta: 0.0,
+        }}
+      >
+        <Marker coordinate={coordinate} pinColor="gold"></Marker>
+      </MapView>
     </SafeAreaView>
   );
 }
@@ -135,19 +152,19 @@ export default function Map({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'left',
-    justifyContent: 'top',
+    backgroundColor: "#fff",
+    alignItems: "left",
+    justifyContent: "top",
     //width: '100%',
   },
   map: {
-    marginTop: '5%',
-    width: '100%',
-    height: '90%',
+    marginTop: "5%",
+    width: "100%",
+    height: "90%",
   },
-  Searchbar : {
+  Searchbar: {
     //alignSelf: 'center',
-    width: '240%',
-    marginLeft: '10%',
+    width: "240%",
+    marginLeft: "10%",
   },
 });
